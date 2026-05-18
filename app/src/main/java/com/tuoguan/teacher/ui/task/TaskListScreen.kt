@@ -5,31 +5,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tuoguan.teacher.network.ConfirmStudentRequest
-import com.tuoguan.teacher.network.RetrofitClient
-import com.tuoguan.teacher.network.TodayTaskResponse
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tuoguan.teacher.viewmodel.TaskViewModel
 
 @Composable
 fun TaskListScreen(
     teacherId: Long,
-    teacherName: String
+    teacherName: String,
+    onLogout: () -> Unit,
+    taskViewModel: TaskViewModel = viewModel()
 ) {
-    var tasks by remember { mutableStateOf<List<TodayTaskResponse>>(emptyList()) }
-    var message by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(true) }
+    val tasks by taskViewModel.tasks.collectAsState()
+    val message by taskViewModel.message.collectAsState()
+    val loading by taskViewModel.loading.collectAsState()
 
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        try {
-            tasks = RetrofitClient.api.getTodayTasks(teacherId)
-            message = "加载成功，共 ${tasks.size} 个任务"
-        } catch (e: Exception) {
-            message = "加载失败：${e.message}"
-        } finally {
-            loading = false
-        }
+    LaunchedEffect(teacherId) {
+        taskViewModel.loadTodayTasks(teacherId)
     }
 
     Column(
@@ -37,7 +28,21 @@ fun TaskListScreen(
             .fillMaxSize()
             .padding(24.dp)
     ) {
-        Text("今日接送任务", style = MaterialTheme.typography.headlineMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "今日接送任务",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Button(
+                onClick = onLogout
+            ) {
+                Text("退出")
+            }
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -45,7 +50,9 @@ fun TaskListScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(message)
+        if (message.isNotBlank()) {
+            Text(message)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -68,23 +75,11 @@ fun TaskListScreen(
 
                         Button(
                             onClick = {
-                                scope.launch {
-                                    try {
-                                        val response = RetrofitClient.api.confirmStudent(
-                                            ConfirmStudentRequest(
-                                                studentId = task.studentId,
-                                                operatorId = teacherId,
-                                                location = task.school
-                                            )
-                                        )
-
-                                        message = response.message
-                                        tasks = RetrofitClient.api.getTodayTasks(teacherId)
-
-                                    } catch (e: Exception) {
-                                        message = "确认失败：${e.message}"
-                                    }
-                                }
+                                taskViewModel.confirmStudent(
+                                    teacherId = teacherId,
+                                    studentId = task.studentId,
+                                    location = task.school
+                                )
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {

@@ -57,4 +57,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
 }

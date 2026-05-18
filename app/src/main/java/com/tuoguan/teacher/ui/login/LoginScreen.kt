@@ -6,20 +6,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.tuoguan.teacher.network.LoginRequest
-import com.tuoguan.teacher.network.RetrofitClient
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tuoguan.teacher.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (Long, String) -> Unit
+    onLoginSuccess: (Long, String) -> Unit,
+    loginViewModel: LoginViewModel = viewModel()
 ) {
-    var phone by remember { mutableStateOf("13700137000") }
-    var password by remember { mutableStateOf("123456") }
-    var message by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
-
-    val scope = rememberCoroutineScope()
+    val phone by loginViewModel.phone.collectAsState()
+    val password by loginViewModel.password.collectAsState()
+    val message by loginViewModel.message.collectAsState()
+    val loading by loginViewModel.loading.collectAsState()
 
     Column(
         modifier = Modifier
@@ -33,7 +31,7 @@ fun LoginScreen(
 
         OutlinedTextField(
             value = phone,
-            onValueChange = { phone = it },
+            onValueChange = { loginViewModel.updatePhone(it) },
             label = { Text("手机号") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -42,7 +40,7 @@ fun LoginScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { loginViewModel.updatePassword(it) },
             label = { Text("密码") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
@@ -52,27 +50,7 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                loading = true
-                message = ""
-
-                scope.launch {
-                    try {
-                        val response = RetrofitClient.api.login(
-                            LoginRequest(phone, password)
-                        )
-
-                        if (response.success) {
-                            onLoginSuccess(response.teacherId, response.teacherName)
-                        } else {
-                            message = response.message
-                        }
-
-                    } catch (e: Exception) {
-                        message = "登录失败：${e.message}"
-                    } finally {
-                        loading = false
-                    }
-                }
+                loginViewModel.login(onLoginSuccess)
             },
             enabled = !loading,
             modifier = Modifier.fillMaxWidth()

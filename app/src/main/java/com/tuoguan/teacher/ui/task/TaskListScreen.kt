@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tuoguan.teacher.network.TodayTaskResponse
 import com.tuoguan.teacher.viewmodel.TaskViewModel
 
 @Composable
@@ -18,6 +19,8 @@ fun TaskListScreen(
     val tasks by taskViewModel.tasks.collectAsState()
     val message by taskViewModel.message.collectAsState()
     val loading by taskViewModel.loading.collectAsState()
+
+    var selectedTask by remember { mutableStateOf<TodayTaskResponse?>(null) }
 
     LaunchedEffect(teacherId) {
         taskViewModel.loadTodayTasks(teacherId)
@@ -37,9 +40,7 @@ fun TaskListScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
 
-            Button(
-                onClick = onLogout
-            ) {
+            Button(onClick = onLogout) {
                 Text("退出")
             }
         }
@@ -66,20 +67,19 @@ fun TaskListScreen(
                         .padding(vertical = 6.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(task.studentName, style = MaterialTheme.typography.titleMedium)
-                        Text(task.school)
-                        Text("时间：${task.expectedPickupTime}")
-                        Text("状态：${task.currentStatus}")
+                        Text(
+                            text = task.studentName,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(text = task.school)
+                        Text(text = "时间：${task.expectedPickupTime}")
+                        Text(text = "状态：${task.currentStatus}")
 
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Button(
                             onClick = {
-                                taskViewModel.confirmStudent(
-                                    teacherId = teacherId,
-                                    studentId = task.studentId,
-                                    location = task.school
-                                )
+                                selectedTask = task
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -89,5 +89,42 @@ fun TaskListScreen(
                 }
             }
         }
+    }
+
+    selectedTask?.let { selected ->
+        AlertDialog(
+            onDismissRequest = {
+                selectedTask = null
+            },
+            title = {
+                Text("确认操作")
+            },
+            text = {
+                Text("确定要确认 ${selected.studentName} 吗？")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        taskViewModel.confirmStudent(
+                            teacherId = teacherId,
+                            studentId = selected.studentId,
+                            location = selected.school
+                        )
+                        selectedTask = null
+                    }
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedTask = null
+                    }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
     }
 }

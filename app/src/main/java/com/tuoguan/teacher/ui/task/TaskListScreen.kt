@@ -29,12 +29,13 @@ fun TaskListScreen(
 
     var selectedTask by remember { mutableStateOf<TodayTaskResponse?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val refreshVersion by taskViewModel.refreshVersion.collectAsState()
 
     LaunchedEffect(teacherId) {
         taskViewModel.loadTodayTasks(teacherId)
     }
 
-    LaunchedEffect(message) {
+    LaunchedEffect(refreshVersion) {
         if (message.isNotBlank()) {
             snackbarHostState.showSnackbar(message)
         }

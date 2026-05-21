@@ -45,8 +45,11 @@ class LoginViewModel : ViewModel() {
                     )
                 )
 
-                if (response.success) {
-                    onSuccess(response.teacherId, response.teacherName)
+                if (response.success && response.data != null) {
+                    onSuccess(
+                        response.data.teacherId,
+                        response.data.teacherName
+                    )
                 } else {
                     _message.value = response.message
                 }

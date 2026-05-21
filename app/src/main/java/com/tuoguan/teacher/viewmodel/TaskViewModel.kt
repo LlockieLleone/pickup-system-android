@@ -24,17 +24,26 @@ class TaskViewModel : ViewModel() {
     private val _confirmingStudentId = MutableStateFlow<Long?>(null)
     val confirmingStudentId: StateFlow<Long?> = _confirmingStudentId
 
+    private val _refreshVersion = MutableStateFlow(0)
+    val refreshVersion: StateFlow<Int> = _refreshVersion
+
     fun loadTodayTasks(teacherId: Long) {
         viewModelScope.launch {
             _loading.value = true
             try {
-                val result = RetrofitClient.api.getTodayTasks(teacherId)
-                _tasks.value = sortTasks(result)
-                _message.value = "加载成功，共 ${result.size} 个任务"
+                val response = RetrofitClient.api.getTodayTasks(teacherId)
+
+                if (response.success && response.data != null) {
+                    _tasks.value = sortTasks(response.data)
+                    _message.value = "加载成功，共 ${response.data.size} 个任务"
+                } else {
+                    _message.value = response.message
+                }
             } catch (e: Exception) {
                 _message.value = "加载失败：${e.message}"
             } finally {
                 _loading.value = false
+                _refreshVersion.value++
             }
         }
     }
@@ -60,10 +69,17 @@ class TaskViewModel : ViewModel() {
                     )
                 )
 
-                _message.value = response.message
+                if (response.success && response.data != null) {
+                    _message.value = response.data.message
+                } else {
+                    _message.value = response.message
+                }
 
-                val refreshedTasks = RetrofitClient.api.getTodayTasks(teacherId)
-                _tasks.value = sortTasks(refreshedTasks)
+                val refreshedResponse = RetrofitClient.api.getTodayTasks(teacherId)
+
+                if (refreshedResponse.success && refreshedResponse.data != null) {
+                    _tasks.value = sortTasks(refreshedResponse.data)
+                }
 
             } catch (e: Exception) {
                 _message.value = "确认失败：${e.message}"

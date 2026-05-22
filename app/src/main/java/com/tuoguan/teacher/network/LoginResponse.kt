@@ -5,5 +5,6 @@ data class LoginResponse(
     val teacherId: Long,
     val teacherName: String,
     val role: String,
+    val token: String,
     val message: String
 )

@@ -11,7 +11,7 @@ import com.tuoguan.teacher.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (Long, String) -> Unit,
+    onLoginSuccess: (Long, String, String) -> Unit,
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val phone by loginViewModel.phone.collectAsState()

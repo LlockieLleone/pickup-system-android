@@ -48,8 +48,8 @@ fun AppNavigation() {
                 }
             } else {
                 LoginScreen(
-                    onLoginSuccess = { id, name ->
-                        sessionViewModel.login(id, name, sessionManager)
+                    onLoginSuccess = { id, name, token ->
+                        sessionViewModel.login(id, name, token, sessionManager)
 
                         navController.navigate(Screen.TaskList.route) {
                             popUpTo(Screen.Login.route) {

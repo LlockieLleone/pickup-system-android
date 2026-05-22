@@ -31,4 +31,20 @@ class SessionManager(context: Context) {
     fun clearSession() {
         prefs.edit().clear().apply()
     }
+
+    fun saveSession(
+        teacherId: Long,
+        teacherName: String,
+        token: String
+    ) {
+        prefs.edit()
+            .putLong("teacherId", teacherId)
+            .putString("teacherName", teacherName)
+            .putString("token", token)
+            .apply()
+    }
+
+    fun getToken(): String {
+        return prefs.getString("token", "") ?: ""
+    }
 }

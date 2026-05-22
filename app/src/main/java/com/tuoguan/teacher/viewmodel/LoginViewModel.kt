@@ -31,7 +31,7 @@ class LoginViewModel : ViewModel() {
     }
 
     fun login(
-        onSuccess: (Long, String) -> Unit
+        onSuccess: (Long, String, String) -> Unit
     ) {
         viewModelScope.launch {
             _loading.value = true
@@ -48,7 +48,8 @@ class LoginViewModel : ViewModel() {
                 if (response.success && response.data != null) {
                     onSuccess(
                         response.data.teacherId,
-                        response.data.teacherName
+                        response.data.teacherName,
+                        response.data.token
                     )
                 } else {
                     _message.value = response.message
